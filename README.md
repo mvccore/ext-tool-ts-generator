@@ -20,13 +20,24 @@ include_once('vendor/autoload.php');
 
 use \MvcCore\Ext\Tools\TsGenerator;
 
-TsGenerator::ParseClass(\Any\Namespace\ClassName::class)
-	->Write(
-		TsGenerator::INTERFACE |
-		TsGenerator::NAMESPACE |
-		TsGenerator::DECLARATION,
-		'/path/to/ClassName.d.ts',
-		'Any.Namespace'
-	);
+TsGenerator::CreateInstance()
+	->SetType(
+		new \ReflectionClass(\PhpObjects\BaseClass::class)
+	)
+	->SetPropsFlags(
+		TsGenerator::PROPS_INHERIT_PROTECTED
+	)
+	->SetTargetPath(
+		__DIR__ . '/Ts/Custom/ClassName.d.ts'
+	)
+	->SetWriteFlags(
+		TsGenerator::WRITE_INTERFACE
+		| TsGenerator::WRITE_DECLARE
+		// | TsGenerator::WRITE_EXPORT
+	)
+	->SetExcludedPropsNames(['db'])
+	//->SetCustomName('Custom.ClassName')
+	->Parse()
+	->Write();
 
 ```
