@@ -1,5 +1,5 @@
 {
-	"name": "mvccore/ext-tool-tsgenerator",
+	"name": "mvccore/ext-tool-ts-generator",
 	"type": "library",
 	"description": "MvcCore - Extension - Tool - TypeScript Generator - utility to easilly generate TypeScript classes, interfaces or enums from PHP equivalents.",
 	"keywords": [
