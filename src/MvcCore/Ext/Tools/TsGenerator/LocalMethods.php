@@ -50,7 +50,7 @@ trait LocalMethods {
 		if (!file_exists($this->targetPath)) 
 			return $this->targetIsNewest = TRUE;
 		$targetMtime = filemtime($this->targetPath);
-		return $this->targetIsNewest = ($targetMtime >= $sourceMtime);
+		return $this->targetIsNewest = ($targetMtime <= $sourceMtime);
 	}
 
 	/**
@@ -104,8 +104,11 @@ trait LocalMethods {
 		$result = [];
 		$phpWithTypes = PHP_VERSION_ID >= 70400;
 		$phpWithUnionTypes = PHP_VERSION_ID >= 80000;
-		if ($this->typesAliases === NULL)
-			$this->typesAliases = static::$typesAliasesDefault;
+		if ($this->typesAliases === NULL) {
+			$typesAliases = static::$typesAliasesDefault;
+		} else {
+			$typesAliases = array_merge([], static::$typesAliasesDefault, $this->typesAliases);
+		}
 		foreach ($props as $prop) {
 			$isStatic = $prop->isStatic();
 			if (
@@ -114,16 +117,21 @@ trait LocalMethods {
 				array_search($prop->name, $this->excludedPropsNames, TRUE) !== FALSE
 			) continue;
 			$accessMod = '';
-			if ($prop->isPrivate()) $accessMod = 'private ';
-			if ($prop->isProtected()) $accessMod = 'protected ';
-			if ($prop->isPublic()) $accessMod = 'public ';
+			if (($this->writeFlags & static::WRITE_CLASS) != 0) {
+				if ($prop->isPrivate()) 
+					$accessMod = 'private ';
+				if ($prop->isProtected()) 
+					$accessMod = 'protected ';
+				if ($prop->isPublic()) 
+					$accessMod = 'public ';
+			}
 			$staticMod = $isStatic ? 'static ' : '';
 			list ($allowNull, $types) = $this->parsePropType(
 				$prop, $phpWithTypes, $phpWithUnionTypes
 			);
 			foreach ($types as $index => $type)
-				if (isset($this->typesAliases[$type]))
-					$types[$index] = $this->typesAliases[$type];
+				if (isset($typesAliases[$type]))
+					$types[$index] = $typesAliases[$type];
 			if (count($types) === 0) 
 				$types = ['any'];
 			$result[] = implode('', [
