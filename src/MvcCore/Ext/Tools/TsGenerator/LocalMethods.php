@@ -139,7 +139,7 @@ trait LocalMethods {
 				$staticMod,
 				$prop->name,
 				($allowNull ? '?: ' : ': '),
-				implode(' | ', $types),
+				implode(' | ', array_map('trim', $types, ['\\'])),
 				';',
 			]);
 		}
