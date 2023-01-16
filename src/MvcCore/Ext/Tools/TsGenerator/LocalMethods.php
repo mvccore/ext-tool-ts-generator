@@ -139,7 +139,7 @@ trait LocalMethods {
 				$staticMod,
 				$prop->name,
 				($allowNull ? '?: ' : ': '),
-				implode(' | ', array_map('trim', $types, ['\\'])),
+				implode(' | ', $types),
 				';',
 			]);
 		}
@@ -201,6 +201,8 @@ trait LocalMethods {
 				$types = explode('|', $rawTypes);
 			}
 		}
+		foreach ($types as $key => $type)
+			$types[$key] = trim($type, '\\');
 		return [
 			$allowNull,	// boolean
 			$types		// \string[]
