@@ -55,7 +55,6 @@ Temporary Items
 .vs
 *.phpproj.user
 composer.lock
-composer.dev.json
-composer.dev.lock
+composer.dev.*
 
 vendor/
