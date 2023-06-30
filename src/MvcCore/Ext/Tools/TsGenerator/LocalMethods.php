@@ -2,6 +2,8 @@
 
 namespace MvcCore\Ext\Tools\TsGenerator;
 
+use \MvcCore\Ext\Tools\TsGenerators\MembersConfig;
+
 /**
  * @mixin \MvcCore\Ext\Tools\TsGenerator
  */
@@ -16,18 +18,41 @@ trait LocalMethods {
 	
 	/**
 	 * 
+	 * @return array
+	 */
+	protected function getTypeTraits () {
+		if ($this->type === NULL) 
+			return NULL;
+		if ($this->typeTraits !== NULL)
+			return $this->typeTraits;
+		/** @var $currentType \ReflectionClass */
+		$typeTraits = [];
+		$currentType = $this->type;
+		while (TRUE) {
+			$typesAndFiles = [$currentType->getName() => $currentType->getFileName()];
+			$this->getTypeTraitsRecursive($currentType, $typesAndFiles);
+			$typeTraits = array_merge([], $typeTraits, $typesAndFiles);
+			$parentType = $currentType->getParentClass();
+			if ($parentType === FALSE) break;
+			$currentType = $parentType;
+		}
+		return $this->typeTraits = $typeTraits;
+	}
+	
+	/**
+	 * 
 	 * @param  \ReflectionClass $type 
 	 * @param  array            $typesAndFiles 
 	 * @return void
 	 */
-	protected function completeTraits (\ReflectionClass $type, array & $typesAndFiles) {
+	protected function getTypeTraitsRecursive (\ReflectionClass $type, array & $typesAndFiles) {
 		$traits = array_keys($type->getTraits());
 		if (count($traits) === 0) return;
 		foreach ($traits as $trait) {
 			if (!isset($typesAndFiles[$trait])) {
 				$traitType = new \ReflectionClass($trait);
 				$typesAndFiles[$trait] = $traitType->getFileName();
-				$this->completeTraits($traitType, $typesAndFiles);
+				$this->getTypeTraitsRecursive($traitType, $typesAndFiles);
 			}
 		}
 	}
@@ -39,10 +64,11 @@ trait LocalMethods {
 	protected function getTargetIsNewest () {
 		if ($this->targetIsNewest !== NULL)
 			return $this->targetIsNewest;
-		$typesAndFiles = [$this->type->getName() => $this->type->getFileName()];
-		$this->completeTraits($this->type, $typesAndFiles);
 		$sourceMtime = 0;
-		foreach ($typesAndFiles as $srcFullPath) {
+		$localMtime = filemtime($this->type->getFileName());
+		if ($localMtime > $sourceMtime) $sourceMtime = $localMtime;
+		$this->getTypeTraits();
+		foreach ($this->typeTraits as $srcFullPath) {
 			$localMtime = filemtime($srcFullPath);
 			if ($localMtime > $sourceMtime) $sourceMtime = $localMtime;
 		}
@@ -94,21 +120,20 @@ trait LocalMethods {
 
 	/**
 	 * 
-	 * @return array
+	 * @param  MembersConfig $cfg
+	 * @return array|\string[]
 	 */
-	protected function parseProps () {
-		$cfg =  $this->getCfg();
-		if (!$cfg->Parse) return [];
-		/** @var \ReflectionProperty[] $props */
-		$props = $this->type->getProperties($cfg->ReflectionFlags);
+	protected function parseType (MembersConfig $cfg) {
 		$result = [];
-		$phpWithTypes = PHP_VERSION_ID >= 70400;
-		$phpWithUnionTypes = PHP_VERSION_ID >= 80000;
 		if ($this->typesAliases === NULL) {
 			$typesAliases = static::$typesAliasesDefault;
 		} else {
 			$typesAliases = array_merge([], static::$typesAliasesDefault, $this->typesAliases);
 		}
+		/** @var \ReflectionProperty[] $props */
+		$props = $this->type->getProperties($cfg->ReflectionFlags);
+		$phpWithTypes = PHP_VERSION_ID >= 70400;
+		$phpWithUnionTypes = PHP_VERSION_ID >= 80000;
 		foreach ($props as $prop) {
 			$isStatic = $prop->isStatic();
 			if (
@@ -126,7 +151,7 @@ trait LocalMethods {
 					$accessMod = 'public ';
 			}
 			$staticMod = $isStatic ? 'static ' : '';
-			list ($allowNull, $types) = $this->parsePropType(
+			list ($allowNull, $types) = $this->parseTypeProp(
 				$prop, $phpWithTypes, $phpWithUnionTypes
 			);
 			foreach ($types as $index => $type)
@@ -153,7 +178,7 @@ trait LocalMethods {
 	 * @param  bool                $phpWithUnionTypes 
 	 * @return array|[bool, \string[]]
 	 */
-	protected function parsePropType (\ReflectionProperty $prop, $phpWithTypes, $phpWithUnionTypes) {
+	protected function parseTypeProp (\ReflectionProperty $prop, $phpWithTypes, $phpWithUnionTypes) {
 		$types = [];
 		$allowNull = FALSE;
 		if ($phpWithTypes && $prop->hasType()) {
@@ -207,6 +232,46 @@ trait LocalMethods {
 			$allowNull,	// boolean
 			$types		// \string[]
 		];
+	}
+	
+	/**
+	 * 
+	 * @param  MembersConfig $cfg
+	 * @return array|\string[]
+	 */
+	protected function parseForm (MembersConfig $cfg) {
+		$result = [];
+		if ($this->typesAliases === NULL) {
+			$formFields2HtmlTypes = static::$formFields2HtmlTypesDefault;
+		} else {
+			$formFields2HtmlTypes = array_merge([], static::$formFields2HtmlTypesDefault, $this->formFields2HtmlTypes);
+		}
+		$fields = $this->form->GetFields();
+		foreach ($fields as $fieldName => $field) {
+			$type = 'HTMLElement';
+			$fieldFullClassName = get_class($field);
+			if (isset($formFields2HtmlTypes[$fieldFullClassName])) {
+				$type = $formFields2HtmlTypes[$fieldFullClassName];
+			} else {
+				foreach ($formFields2HtmlTypes as $fieldClass2Detect => $htmlType) {
+					if (is_subclass_of($field, $fieldClass2Detect)) {
+						$type = $htmlType;
+						break;
+					}
+				}
+			}
+			$accessMod = '';
+			if (($this->writeFlags & static::WRITE_CLASS) != 0)
+				$accessMod = 'public '; // all form fields are accessible as public by default
+			$result[] = implode('', [
+				$accessMod,
+				$fieldName,
+				': ',
+				$type,
+				';',
+			]);
+		}
+		return $result;
 	}
 
 	/**
