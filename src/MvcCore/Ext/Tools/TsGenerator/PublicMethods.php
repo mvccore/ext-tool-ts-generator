@@ -317,6 +317,9 @@ trait PublicMethods {
 	public function Write () {
 		if (!$this->getTargetIsNewest()) 
 			return FALSE;
+		$targetPathDir = str_replace('\\', '/', dirname($this->targetPath));
+		if (!is_dir($targetPathDir))
+			mkdir($targetPathDir, 0755, TRUE);
 		return \MvcCore\Tool::AtomicWrite(
 			$this->targetPath, $this->completeCode(), 'w'
 		);
