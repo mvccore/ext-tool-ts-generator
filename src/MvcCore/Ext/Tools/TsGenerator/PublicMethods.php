@@ -14,6 +14,25 @@ trait PublicMethods {
 	public static function CreateInstance () {
 		return new static;
 	}
+
+	/**
+	 * @return array<string, string>
+	 */
+	public static function GetTypesAliasesDefault () {
+		return static::$typesAliasesDefault;
+	}
+	
+	/**
+	 * Return two arrays - excluded static and instance properties.
+	 * @param  string $type Possible values:
+	 * - `\MvcCore\Ext\Tools\TsGenerator::INTERFACE_MODEL`
+	 * - `\MvcCore\Ext\Tools\TsGenerator::INTERFACE_EXTENDED_MODEL`
+	 * - `\MvcCore\Ext\Tools\TsGenerator::INTERFACE_FORM`
+	 * @return list<array<string>, array<string>>
+	 */
+	public static function GetExcludedPropsNamesModelDefault ($type) {
+		return static::$excludedPropsNamesModelDefault[$type];
+	}
 	
 	/**
 	 * 
