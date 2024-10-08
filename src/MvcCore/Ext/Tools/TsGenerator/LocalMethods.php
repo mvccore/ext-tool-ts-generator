@@ -246,6 +246,11 @@ trait LocalMethods {
 		} else {
 			$formFields2HtmlTypes = array_merge([], static::$formFields2HtmlTypesDefault, $this->formFields2HtmlTypes);
 		}
+
+		$accessMod = '';
+		if (($this->writeFlags & static::WRITE_CLASS) != 0)
+			$accessMod = 'public '; // all form fields are accessible as public by default
+		
 		$fields = $this->form->GetFields();
 		foreach ($fields as $fieldName => $field) {
 			$type = 'HTMLElement';
@@ -260,9 +265,7 @@ trait LocalMethods {
 					}
 				}
 			}
-			$accessMod = '';
-			if (($this->writeFlags & static::WRITE_CLASS) != 0)
-				$accessMod = 'public '; // all form fields are accessible as public by default
+			
 			$result[] = implode('', [
 				$accessMod,
 				$fieldName,
