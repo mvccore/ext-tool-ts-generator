@@ -117,19 +117,29 @@ trait Props {
 	];
 
 	/**
+	 * 
+	 * @var array|array<string, string>
+	 */
+	protected static $formFieldset2HtmlTypesDefault = [
+		'MvcCore\\Ext\\Forms\\Fieldset'	=> 'HTMLFieldSetElement',
+		
+	];
+
+	/**
 	 * Parsing mode.
 	 * @var int
 	 */
 	protected $mode = self::MODE_TYPE;
 
 	/**
-	 * 
+	 * PHP source object reflection type (source object could 
+	 * be any PHP class instance or MvcCore Model type).
 	 * @var \ReflectionClass|NULL
 	 */
 	protected $type = NULL;
 
 	/**
-	 * 
+	 * Form instance, which has elements to render into TS.
 	 * @var \MvcCore\Ext\IForm|NULL
 	 */
 	protected $form = NULL;
@@ -139,6 +149,12 @@ trait Props {
 	 * @var int
 	 */
 	protected $propsFlags = self::PROPS_INHERIT_PROTECTED;
+	
+	/**
+	 * Source form elements flags.
+	 * @var int
+	 */
+	protected $formFlags = self::FORM_FIELDS_ALL;
 
 	/**
 	 * 
@@ -187,6 +203,12 @@ trait Props {
 	 * @var array|array<string, string>
 	 */
 	protected $formFields2HtmlTypes = [];
+
+	/**
+	 * 
+	 * @var array|array<string, string>
+	 */
+	protected $formFieldset2HtmlTypes = [];
 
 	/**
 	 * 

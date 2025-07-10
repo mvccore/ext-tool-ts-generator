@@ -30,7 +30,18 @@ interface IConstants {
 		PROPS_STATIC_ALL			= 226, // 2|32|64|128
 		PROPS_ALL					= 254, // 2|4|8|16|32|64|128
 		PROPS_INHERIT_PROTECTED		= 10; // 2|8;
-	
+
+	/**
+	 * Source form elements flags.
+	 * @var int
+	 */
+	const
+		FORM_FIELDS					= 1,
+		FORM_SUBMITS				= 2,
+		FORM_FIELDSETS				= 4,
+		FORM_FIELDS_ALL				= 3, // 1|2
+		FORM_ALL					= 7; // 1|2|4
+
 	/**
 	 * TypeScript output flags.
 	 * @var int

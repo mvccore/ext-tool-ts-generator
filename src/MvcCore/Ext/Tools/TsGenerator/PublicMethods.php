@@ -133,6 +133,24 @@ trait PublicMethods {
 	public function GetPropsFlags () {
 		return $this->propsFlags;
 	}
+	
+	/**
+	 * 
+	 * @param  int $formFlags
+	 * @return \MvcCore\Ext\Tools\TsGenerator
+	 */
+	public function SetFormFlags ($formFlags) {
+		$this->formFlags = $formFlags;
+		return $this;
+	}
+	
+	/**
+	 * 
+	 * @return int
+	 */
+	public function GetFormFlags () {
+		return $this->formFlags;
+	}
 
 	/**
 	 * 
@@ -233,6 +251,34 @@ trait PublicMethods {
 	 */
 	public function AddFormFields2HtmlTypes ($formFields2HtmlTypes) {
 		$this->formFields2HtmlTypes = array_unique(array_merge([], $this->formFields2HtmlTypes, $formFields2HtmlTypes));
+		return $this;
+	}
+
+	/**
+	 * 
+	 * @return array|array<string, string>
+	 */
+	public function GetFormFieldset2HtmlTypes () {
+		return $this->formFieldset2HtmlTypes;
+	}
+	
+	/**
+	 * 
+	 * @param  array|array<string, string> $formFieldset2HtmlTypes 
+	 * @return \MvcCore\Ext\Tools\TsGenerator
+	 */
+	public function SetFormFieldset2HtmlTypes ($formFieldset2HtmlTypes) {
+		$this->formFieldset2HtmlTypes = $formFieldset2HtmlTypes;
+		return $this;
+	}
+
+	/**
+	 * 
+	 * @param  array|array<string, string> $formFieldset2HtmlTypes 
+	 * @return \MvcCore\Ext\Tools\TsGenerator
+	 */
+	public function AddFormFieldset2HtmlTypes ($formFieldset2HtmlTypes) {
+		$this->formFieldset2HtmlTypes = array_unique(array_merge([], $this->formFieldset2HtmlTypes, $formFieldset2HtmlTypes));
 		return $this;
 	}
 

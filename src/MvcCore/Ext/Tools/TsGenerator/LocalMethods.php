@@ -241,39 +241,86 @@ trait LocalMethods {
 	 */
 	protected function parseForm (MembersConfig $cfg) {
 		$result = [];
+
+		$accessMod = '';
+		if (($this->writeFlags & static::WRITE_CLASS) != 0)
+			$accessMod = 'public '; // all form fields are accessible as public by default
+		
 		if ($this->typesAliases === NULL) {
 			$formFields2HtmlTypes = static::$formFields2HtmlTypesDefault;
 		} else {
 			$formFields2HtmlTypes = array_merge([], static::$formFields2HtmlTypesDefault, $this->formFields2HtmlTypes);
 		}
 
-		$accessMod = '';
-		if (($this->writeFlags & static::WRITE_CLASS) != 0)
-			$accessMod = 'public '; // all form fields are accessible as public by default
-		
 		$fields = $this->form->GetFields();
-		foreach ($fields as $fieldName => $field) {
-			$type = 'HTMLElement';
-			$fieldFullClassName = get_class($field);
-			if (isset($formFields2HtmlTypes[$fieldFullClassName])) {
-				$type = $formFields2HtmlTypes[$fieldFullClassName];
-			} else {
-				foreach ($formFields2HtmlTypes as $fieldClass2Detect => $htmlType) {
-					if (is_subclass_of($field, $fieldClass2Detect)) {
-						$type = $htmlType;
-						break;
+		$submits = $this->form->GetSubmitFields();
+		$fieldsets = $this->form->GetFieldsets();
+		
+		$renderFields = ($this->formFlags & static::FORM_FIELDS) != 0;
+		$renderSubmits = ($this->formFlags & static::FORM_SUBMITS) != 0;
+		$renderFieldsets = ($this->formFlags & static::FORM_FIELDSETS) != 0;
+
+		if ($renderFields && !$renderSubmits) {
+			foreach (array_keys($submits) as $submitName)
+				unset($fields[$submitName]);
+		}
+
+		if ($renderFields) {
+			foreach ($fields as $fieldName => $field) {
+				$type = 'HTMLElement';
+				$fieldFullClassName = get_class($field);
+				if (isset($formFields2HtmlTypes[$fieldFullClassName])) {
+					$type = $formFields2HtmlTypes[$fieldFullClassName];
+				} else {
+					foreach ($formFields2HtmlTypes as $fieldClass2Detect => $htmlType) {
+						if (is_subclass_of($field, $fieldClass2Detect)) {
+							$type = $htmlType;
+							break;
+						}
 					}
 				}
-			}
 			
-			$result[] = implode('', [
-				$accessMod,
-				$fieldName,
-				': ',
-				$type,
-				';',
-			]);
+				$result[] = implode('', [
+					$accessMod,
+					$fieldName,
+					': ',
+					$type,
+					';',
+				]);
+			}
 		}
+
+		if ($renderFieldsets) {
+			if ($this->typesAliases === NULL) {
+				$formFieldset2HtmlTypes = static::$formFieldset2HtmlTypesDefault;
+			} else {
+				$formFieldset2HtmlTypes = array_merge([], static::$formFieldset2HtmlTypesDefault, $this->formFieldset2HtmlTypes);
+			}
+			$fieldsets = $this->form->GetFieldsets();
+			foreach ($fieldsets as $fieldsetName => $fieldset) {
+				$type = 'HTMLFieldSetElement';
+				$fieldsetFullClassName = get_class($fieldset);
+				if (isset($formFieldset2HtmlTypes[$fieldsetFullClassName])) {
+					$type = $formFieldset2HtmlTypes[$fieldsetFullClassName];
+				} else {
+					foreach ($formFieldset2HtmlTypes as $fieldsetClass2Detect => $htmlType) {
+						if (is_subclass_of($fieldset, $fieldsetClass2Detect)) {
+							$type = $htmlType;
+							break;
+						}
+					}
+				}
+
+				$result[] = implode('', [
+					$accessMod,
+					$fieldsetName,
+					': ',
+					$type,
+					';',
+				]);
+			}
+		}
+
 		return $result;
 	}
 
